@@ -94,7 +94,7 @@ the continuous boundary on a coarse mesh; this is reported explicitly.
 | --- | --- |
 | `experiment_central_diff.py` | Demonstrates that central drift differencing breaks the M-matrix property and introduces spurious near-origin behavior. |
 | `experiment_smax.py` | Studies domain truncation at fixed mesh spacing for `S_max/K` from 3 upward. |
-| `experiment_solvers.py` | Benchmarks policy iteration against PSOR in iteration count and CPU time on the same fitted LCP. PSOR stops when the componentwise LCP residual is below `1e-10`, not on an iterate-difference test. |
+| `experiment_solvers.py` | Benchmarks policy iteration against PSOR in iteration count and CPU time on the same fitted LCP, then runs a four-tolerance PSOR sweep against the direct solution and writes `tolerance_sweep.csv`. PSOR stops on the componentwise LCP residual, not an iterate-difference test. |
 | `experiment_verification.py` | Checks LCP residuals, complementarity, monotonicity, convexity, option bounds, and contact-set contiguity. |
 | `experiment_convergence.py` | Recomputes the aligned-grid constant-volatility convergence table plus production contact brackets and writes `stage1_convergence.csv`. |
 | `stage2_convergence_report.py` | Recomputes the four-mesh local-volatility study against the independent ODE reference and writes `stage2_convergence.csv`. |
@@ -135,6 +135,7 @@ the continuous boundary on a coarse mesh; this is reported explicitly.
 | `stage1_convergence.csv` | Aligned-grid constant-volatility errors, ratios, observed orders, LCP residuals, and production contact brackets. |
 | `stage2_convergence.csv` | Production and aligned local-volatility errors, observed orders, production brackets, free-boundary locations, and ODE-reference metadata. |
 | `adaptive_convergence.csv` | Uniform versus boundary-aligned clustered errors, ratios, orders, and clustering gains. |
+| `tolerance_sweep.csv` | Representative-mesh PSOR tolerance sweep with `V(100)`, free-boundary estimate, raw and scaled residuals, and differences from the direct solve. |
 | `spread2d_results.csv` | Three-mesh 2D spread-put iteration counts, wall times, pricing-window errors, LCP residuals, and M-matrix diagnostics. |
 | `spread2d_domain.csv` | Fixed-mesh `L = 240, 300, 400` domain-truncation check at `(S1,S2) = (100,50)`. |
 

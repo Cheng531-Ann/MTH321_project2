@@ -1,0 +1,314 @@
+﻿NUMERICAL VALUATION OF PERPETUAL AMERICAN PUT OPTIONS VIA LCP
+A simple English speech script for the 18-slide presentation
+
+Approximate speaking time: 16-18 minutes, at a normal pace
+Notes:
+- Text in [brackets] is a delivery cue and should not be read aloud.
+- The "Transition" sentence is part of the speech. It connects the current slide to the next one.
+- The script uses short sentences and explains technical terms in plain English.
+
+
+================================================================
+SLIDE 1 - TITLE
+================================================================
+
+Good morning, everyone. Today I will present our work on the numerical valuation of perpetual American put options.
+
+The main tool is a linear complementarity problem, or LCP. We solve it with two key ideas: a special grid method that keeps the matrix well behaved, and an iterative solver called policy iteration.
+
+Our goal is simple. Every number in this presentation should be supported by one of three things: a residual, an exact benchmark, or a second solver.
+
+
+================================================================
+SLIDE 2 - OUTLINE
+================================================================
+
+Transition: To show how these pieces fit together, let me give you the plan.
+
+The talk has five parts.
+
+First, we build the model and explain the main difficulty: the free boundary.
+
+Second, we present the numerical method. This includes the grid, the matrix, and the solver.
+
+Third, we verify the results. We compare them with exact answers, check the error, and use a second solver.
+
+Fourth, we show several extensions: a better grid, a better boundary condition, sensitivities, and a two-dimensional case.
+
+Finally, we summarize the main conclusions and state the limits of our work.
+
+
+================================================================
+SLIDE 3 - THE PROBLEM
+================================================================
+
+Transition: Let us begin with the model and the main difficulty.
+
+An American put option lets the holder sell the underlying asset at the strike price K at any time. So the value of the option is an optimal stopping value. The holder must decide when to stop and exercise.
+
+Here we study the perpetual case. The option has no expiry date. Therefore, the value does not change with time, and the time derivative is zero. The pricing problem becomes an elliptic obstacle problem on a finite price range.
+
+There are two regions. Below the boundary S-star, early exercise is optimal. Above S-star, it is better to wait. At S-star, the option value and its slope must be continuous.
+
+The important point is this: S-star is not given to us. It is part of the answer. The real difficulty is the unknown free boundary, not the Black-Scholes operator itself.
+
+
+================================================================
+SLIDE 4 - MODEL AND BENCHMARK
+================================================================
+
+Transition: Now we write this free-boundary problem in a form a computer can solve.
+
+Let L be the Black-Scholes operator. The LCP contains two conditions.
+
+First, the option value V must be at least the payoff. The payoff is the maximum of K minus S and zero.
+
+Second, where the option value is above the payoff, the Black-Scholes equation must hold. In other words, the equation is active only in the continuation region.
+
+We also use two boundary conditions: V at zero equals K, and V at the far end equals zero.
+
+For the first test case, we use K equal to 100, r equal to 5 percent, no dividend, volatility equal to 20 percent, and a maximum price of 2400. In this case, a closed-form answer exists. The exact free boundary is about 71.43, and the exact value at price 100 is about 12.32.
+
+For the second test case, we add a dividend and local volatility. We will come back to that later.
+
+The key point is this: the first test has an exact answer. So we can judge our method against the truth, not against a prettier plot.
+
+
+================================================================
+SLIDE 5 - FIRST GRID FAILS
+================================================================
+
+Transition: To compute the answer, we must turn the derivatives into a finite grid. Our first attempt looked natural, but it failed.
+
+We first used central differences. This is a common and simple choice. But here it creates a positive off-diagonal entry in the matrix.
+
+We measure the balance between drift and diffusion with a number called the Peclet number. In our first test, this number is 2.5. That is above 2, and it does not depend on the grid size.
+
+A positive off-diagonal entry breaks an important property of the matrix. The matrix is no longer an M-matrix. In simple terms, the solution may oscillate, and the matrix no longer gives a monotone answer.
+
+You can see this in the two matrix plots. The first one has a clean band. The second one has extra red points, which are wrong signs.
+
+The worst part is that making the grid finer does not fix the sign problem. So we need a different way to build the grid weights.
+
+
+================================================================
+SLIDE 6 - EXPONENTIAL FITTING
+================================================================
+
+Transition: So how do we fix it? The answer is exponential fitting.
+
+Exponential fitting uses a special weight based on the exponential function. Instead of the usual central weights, we choose the lower and upper weights so that both off-diagonal entries are negative and the diagonal entry is positive.
+
+The row sum is exactly r. Because r is positive, the row sum is also positive. These two facts make the matrix a nonsingular M-matrix at every cell Peclet number.
+
+This has three benefits. First, the solution is monotone. Second, there are no spurious oscillations. Third, we do not need a limiter or a special start-up correction.
+
+At a Peclet number of zero, the weights reduce to the usual central differences.
+
+In simple terms, we adjust the weights to the local drift. This keeps the signs correct on every grid and for every Peclet number.
+
+
+================================================================
+SLIDE 7 - LCP AND POLICY ITERATION
+================================================================
+
+Transition: With a monotone matrix, the next issue is the obstacle condition. This is where policy iteration comes in.
+
+The discrete problem is an LCP. For each grid point, we have two conditions: the option value must be above the payoff, and the equation must hold where continuation is optimal.
+
+Policy iteration uses a simple loop. We start with the option value equal to the payoff. Then each row is either active or free. An active row is in the exercise region. A free row is in the continuation region.
+
+In the policy step, we fix the active values, remove their connections, and solve a sparse tridiagonal system for the free values. Then we check whether any active row should be released. After that, we project the value back to at least the payoff.
+
+We stop when the active set stops changing and the largest update is below ten to the power minus twelve.
+
+We also check the residual, the payoff bounds, monotonicity, convexity, and the contact set.
+
+The main idea is simple: policy iteration turns a nonlinear obstacle problem into a sequence of exact linear solves. The only real unknown is the active set.
+
+
+================================================================
+SLIDE 8 - VERIFICATION
+================================================================
+
+Transition: We now have a fast solver. But fast does not mean correct. We need a clear verification plan.
+
+We use five checks.
+
+First, an oracle. For constant coefficients, we have an exact formula for S-star and for the option value.
+
+Second, a residual. We measure how far the computed solution is from satisfying the equations.
+
+Third, shape checks. The value must stay above the payoff and below K. It must decrease with S, be convex, and have one continuous contact set.
+
+Fourth, a second solver. We run PSOR on the same matrix, with the same tolerance and the same starting point. If two very different solvers agree, we have more confidence.
+
+Fifth, an aligned grid. We place a grid point exactly at S-star. This separates the order of the method from the error caused by the kink.
+
+The main point is that every numerical claim is tied to a residual, an oracle, or a second method.
+
+
+================================================================
+SLIDE 9 - STAGE 1 ORDER
+================================================================
+
+Transition: We start with the first test case, where an exact answer is available.
+
+Here we place a node at S-star, use a piecewise uniform grid, and apply a Robin boundary condition at the far end.
+
+The table shows the maximum error as we refine the grid. When we double the number of points from 600 to 1200, the error falls by about 3.99. When we double it again, the error falls by about 4.00.
+
+The observed order is about 2.00. In simple terms, if we halve the grid size, the error becomes about four times smaller.
+
+The LCP residual is below 5.5 times ten to the power minus twelve on every grid. The policy update is below ten to the power minus twelve.
+
+So the method is not only stable. It also converges at the expected second-order rate.
+
+
+================================================================
+SLIDE 10 - CONTACT BRACKETS
+================================================================
+
+Transition: The convergence is good, but what happens to the free boundary on a more practical grid?
+
+Now we use a uniform grid and the production condition: the value at the far end is zero.
+
+We do not put S-star into the grid. Instead, we look at the contact bracket. This bracket is the gap between the last exercise node and the first continuation node.
+
+At 600 and 1200 points, the bracket lies to the right of the true boundary. At 2400 points, the bracket from 71 to 72 contains the exact value. At 4800 points, the bracket is 71.5 to 72, which is slightly to the right again.
+
+This may look surprising. More points do not always mean that every bracket contains the true value. A bracket is a discrete transition, not a confidence interval.
+
+So we report the bracket as it is, and we do not pretend that a coarse bracket is a precise estimate.
+
+
+================================================================
+SLIDE 11 - FREE BOUNDARY
+================================================================
+
+Transition: At one grid, the bracket contains the true value. Let us look at that case in more detail.
+
+For 2400 points, the bracket from 71 to 72 contains the exact boundary of about 71.43. The grid estimate is about 71.65.
+
+The plot shows the option value and the payoff. In the continuation region, the value leaves the payoff smoothly. The slope at the boundary is minus one.
+
+This is exactly what the theory predicts. The value and the slope are continuous at S-star.
+
+The important point is that the boundary comes from the obstacle condition. We do not impose it by hand. It appears naturally from the numerical solution.
+
+
+================================================================
+SLIDE 12 - SOLVER ERROR
+================================================================
+
+Transition: We have checked the spatial error. Now we must make sure that solver error is not hiding inside it.
+
+Here we compare policy iteration with PSOR.
+
+Policy iteration needs 301 sweeps and takes about 0.045 seconds. PSOR needs 96,600 sweeps and takes about 20.6 seconds. So policy iteration is much faster.
+
+The two solutions also agree very well. Their residuals are about 9.1 times ten to the power minus thirteen and 9.9 times ten to the power minus eleven. The difference between the two solutions is only about 5.7 times ten to the power minus ten.
+
+This difference is far below the spatial error, which is between ten to the power minus four and ten to the power minus two.
+
+So the error we report comes from the grid, not from the linear solver.
+
+
+================================================================
+SLIDE 13 - STAGE 2
+================================================================
+
+Transition: Up to now, we have used constant volatility. Now let us make the model more realistic.
+
+In the second test, we add a dividend and local volatility. The volatility changes with the asset price through a smooth function.
+
+There is no simple closed-form answer here. So we build an independent reference by solving an ordinary differential equation with a shooting method.
+
+The reference gives a free boundary of about 69.17 and a value at price 100 of about 16.21. Our production grid gives a boundary of about 69.17 as well.
+
+The table shows the error on aligned grids. The error falls from 3.22 times ten to the power minus two to 5.06 times ten to the power minus four. The error ratios are close to four, and the observed order is 2.00.
+
+So the local-volatility solution agrees with an independent method, and the second-order rate is still there.
+
+
+================================================================
+SLIDE 14 - ADAPTIVE GRID AND FAR FIELD
+================================================================
+
+Transition: The second-order result still holds. Next, we improve accuracy without changing the solver.
+
+We make two changes.
+
+First, we cluster grid points near the free boundary. At 2400 points, this gives a maximum error that is 2.255 times smaller. The observed ratios are still close to four, so the order is still about two.
+
+Second, we use a Robin condition at the far end instead of setting the value to zero. With the boundary at 400, the error at price 80 falls from about 2.5 times ten to the power minus two to about 6.4 times ten to the power minus five.
+
+This is a very large improvement.
+
+The main point is that clustering lowers the error constant, and the Robin condition removes the far-field bias. The solver itself does not change.
+
+
+================================================================
+SLIDE 15 - EXTENSIONS
+================================================================
+
+Transition: These tools work well in one dimension. The next question is whether they extend to more useful cases.
+
+We show two extensions.
+
+The first is adjoint sensitivities. With one transposed solve, we get the sensitivity of the option value to volatility, the interest rate, and the dividend rate. These results match direct finite differences to about 2 times ten to the power minus nine. They are also within 0.31 percent of the exact derivative.
+
+The second is an American spread put in two dimensions. The spread option depends on two assets. In our test, the correlation is zero. The fitted five-point operator is still an M-matrix.
+
+The two-dimensional problem has more than 101,000 unknowns. The error falls from 4.07 times ten to the power minus two to 1.61 times ten to the power minus two. Changing the domain size from 300 to 400 changes the answer by only about 9.7 times ten to the power minus four.
+
+So the same construction gives parameter risk at the cost of one extra solve, and it also works for a real two-dimensional obstacle problem.
+
+
+================================================================
+SLIDE 16 - LIMITATIONS
+================================================================
+
+Transition: The results are strong, but we must be clear about what we do not claim.
+
+There are four limits.
+
+First, the far-field condition is a truncation. Setting the value to zero at the maximum price is an approximation. The pure truncation error at price 100 is about 5.6 times ten to the power minus three. The total error is about 4.1 times ten to the power minus three, because different errors partly cancel. We measure this, but we do not hide it.
+
+Second, the contact-set location is at most first order. Coarse grids can miss the true boundary. We have already seen this in the bracket table.
+
+Third, the reference for the local-volatility case is semi-analytic. It comes from ODE shooting, not from a closed-form formula.
+
+Fourth, the two-dimensional test only covers zero correlation. A correlated model would need a nine-point stencil.
+
+The main point is that verified results, approximations, and open questions are kept separate.
+
+
+================================================================
+SLIDE 17 - CONCLUSIONS
+================================================================
+
+Transition: With both the results and the limits in mind, let me bring everything together.
+
+We have four main conclusions.
+
+First, exponential fitting gives an M-matrix at every cell Peclet number. No limiter is needed.
+
+Second, policy iteration with sparse direct solves is very fast. At 400 points, it needs 301 sweeps, while PSOR needs 96,600.
+
+Third, both stages show second-order convergence. Stage 1 has ratios from 3.99 to 4.00. Stage 2 has order 2.00 against an independent ODE reference.
+
+Fourth, the algebraic error is at most ten to the power minus twelve, while the spatial error is between ten to the power minus four and ten to the power minus two. So the grid error is the main error.
+
+We also showed several extensions: grid clustering, a Robin far-field condition, adjoint sensitivities, and a two-dimensional spread LCP.
+
+
+================================================================
+SLIDE 18 - THANK YOU
+================================================================
+
+Transition: These are our main conclusions. I will stop here and welcome your questions.
+
+Thank you for your attention. I am happy to answer any questions.
+
+All the figures and tables in this talk can be regenerated with the command python run_all.py.

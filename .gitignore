@@ -1,0 +1,30 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local toolchains and scratch output
+.tools/
+.miktex-*/
+.texmf/
+tmp/
+
+# LaTeX intermediates
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Course-provided templates and personal working notes
+project2上传材料包/
+latex_report_template_bvp.*
+submission_checklist_bvp.*
+Project_2_Brief.txt
+problem_pack.txt
+problem_definition_sheet.txt
+Defense_Guide_Bilingual.pdf
+report_explanation_zh.pdf
+page-*.png
+qa_*.png
+stage2page-*.png
+report_text.txt
